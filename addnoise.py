@@ -23,5 +23,5 @@ h.baum_welch(ta_n, iter_limit=1000, threshold=-1e-3,
         pseudocounts=[0, 1e-3, 0])
 g2 = hmm.convert2ghmm(h)
 f = open("ta_with_noise", "w")
-pickle.dump(g2, f, 2)
+pickle.dump(g2, f)
 
