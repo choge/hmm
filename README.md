@@ -16,8 +16,8 @@ of emission probability matrix.
     import numpy as np
     import hmm
 
-    t = np.array([0.55, 0.45], [0.4, 0.6])
-    e = np.array([0.6, 0.3, 0.1], [0.1, 0.4, 0.5])
+    t = np.array([[0.55, 0.45], [0.4, 0.6]])
+    e = np.array([[0.6, 0.3, 0.1], [0.1, 0.4, 0.5]])
     i = np.array([0.4, 0.6])
     hmm = hmm.HMM(t, e, i)
 
