@@ -1,3 +1,4 @@
 *.pyc
 .DS_Store
 ta_with_noise
+.ropeproject/*

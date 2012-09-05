@@ -2,9 +2,6 @@
 # -*- coding:utf-8 -*-
 #
 #
-# Log Likelihood が下がってしまう！！！直す！！！！
-# 直した！！！
-# 原因はbetaの更新式のself._e[x[n]]だった(正解はself._e[x[n+1]])
 #
 
 import numpy as np
@@ -83,9 +80,10 @@ class HMM(object):
             print n, l, dif
             l_prev = l
 
-    def estimate(self, observation):
-        """Calculate alpha"""
-        x = observation
+    def estimate(self, x, want_alpha=False):
+        """Calculate alpha
+
+        @param x  is an observation, which should be a list of integers."""
         N = len(x)
         # \hat{alpha}: p(z_n | x_1, ..., x_n)
         alpha = np.zeros([N, self._K], float)
@@ -100,6 +98,8 @@ class HMM(object):
             a = self._e[x[n]] * np.dot(alpha[n -1], self._t)
             c[n] = a.sum()
             alpha[n] = a / c[n]
+        if want_alpha:
+            return alpha, c
         # Calculate Beta
         for n in xrange(N - 2, -1, -1):
             beta[n] = np.dot(beta[n + 1] * self._e[x[n + 1]], self._t.T) / c[n + 1]
@@ -133,9 +133,26 @@ class HMM(object):
         self._e = np.dot(x_digits, gamma) / gamma.sum(0)
         return log_likelihood
 
-    def viterbi(self, observations):
+    def viterbi(self, x):
         """Decode observations."""
-        pass
+        N = len(x)
+        alpha, c = self.estimate(x, want_alpha=True)
+        alpha, c = np.log(alpha), np.log(c)
+        alpha = np.array([alpha[n] + c[:n+1].sum() for n in xrange(N)])
+        # ^ Log alpha (Not \hat{alpha})
+        logt, loge = np.log(self._t), np.log(self._e)
+        omega = np.log(self._i) + loge[x[0]]
+        path = np.array([[i for i in xrange(self._K)] for n in xrange(N)])
+        # calculate the most probable path at each position of the observation
+        for n in xrange(1, N):
+            prob = loge[x[n]] + omega + logt.T
+            omega = np.max(prob, axis=1)
+            path[n] = np.argmax(prob, axis=1)
+        # Seek the most likely route (From N-1 to 0)
+        route = [np.argmax(omega)]
+        for n in xrange(N - 2, -1, -1):
+            route.append(path[n][route[-1]])
+        return route[::-1], omega.max()
 
     def normalize_transition(self):
         """Normalize transition probabilities to 1."""
@@ -150,7 +167,7 @@ class HMM(object):
         self._i /= self._i.sum()
 
     def add_pseudocounts(self, pseudocounts):
-        """Add pseudocounts to avoid zero probabilities.
+        """Add pseudocounts (Laplace correction).
 
         @param pseudocounts  a list of pseudocounts, which consists of
                              pseudocounts in float or double for transition

@@ -8,14 +8,14 @@ import pickle
 
 # make a dataset
 dm = predictor.FastaDataSetMaker()
-ta = dm.read_from_file("../predictor/datasets/TA_all.fasta",
+ta = dm.read_from_file("TA_all.fasta",
         name="ta", label=1)
 charlist = "ACDEFGHIKLMNPQRSTVWY"
 char_dic = {charlist[i]: i for i in xrange(20)}
 ta_n = [[char_dic[c] for c in seq.sequence[::-1]] for seq in ta]
 
 # convert hmm
-g = ghmm.HMMOpen("../predictor/models/ta2.1.2.xml")
+g = ghmm.HMMOpen("ta2.1.2.xml")
 h = hmm.convert_ghmm(g)
 
 # Training
