@@ -28,4 +28,9 @@ of emission probability matrix.
             threshold=1e-5, pseudocounts=[0, 1e-4, 0])
 
     path, l = hmm.viterbi([2, 2, 1, 0, 0, 2, 1, 1, 1, 0, 0])
-    
+
+Methods
+-------
++ `baum_welch` :
+A basic Baum-Welch algorithm. It requires a list of observations, where 
+each observation is represented as a list of integers.
