@@ -19,15 +19,15 @@ of emission probability matrix.
     t = np.array([[0.55, 0.45], [0.4, 0.6]])
     e = np.array([[0.6, 0.3, 0.1], [0.1, 0.4, 0.5]])
     i = np.array([0.4, 0.6])
-    hmm = hmm.HMM(t, e, i)
+    h = hmm.HMM(t, e, i)
 
     observations = np.array([[2, 2, 2, 2, 1, 0, 0, 1, 1, 1, 0, 2],
             [2, 2, 2, 1, 2, 1, 0, 0, 0, 1, 1, 2, 1, 2],
             [1, 0, 2, 2, 0, 0, 1, 1, 1, 0, 2, 0, 2, 0]])
-    hmm.baum_welch(observations, iter_limit=1000, 
+    h.baum_welch(observations, iter_limit=1000, 
             threshold=1e-5, pseudocounts=[0, 1e-4, 0])
 
-    path, l = hmm.viterbi([2, 2, 1, 0, 0, 2, 1, 1, 1, 0, 0])
+    path, l = h.viterbi([2, 2, 1, 0, 0, 2, 1, 1, 1, 0, 0])
 
 Methods
 -------

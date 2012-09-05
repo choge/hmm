@@ -154,6 +154,10 @@ class HMM(object):
             route.append(path[n][route[-1]])
         return route[::-1], omega.max()
 
+    def sample(self, length):
+        """Sample the sequence for specified length"""
+        pass
+
     def normalize_transition(self):
         """Normalize transition probabilities to 1."""
         self._t /= self._t.sum(1)[:, np.newaxis]
