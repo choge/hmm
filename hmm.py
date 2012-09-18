@@ -6,6 +6,7 @@
 
 import numpy as np
 import ghmm
+import logging
 
 class HMM(object):
     """Implementation of hidden Markov model.
@@ -30,23 +31,30 @@ class HMM(object):
         self._i = initial
         self._K = len(initial)      # Number of classes
         self._M = len(emission)  # Number of symbols
+        logging.basicConfig(format='[%(asctime)s] %(message)s')
 
 
     def baum_welch(self,
             observations,
             iter_limit=100,
             threshold=1e-5,
-            pseudocounts=[0, 0, 0]):
+            pseudocounts=[0, 0, 0],
+            do_logging=True,
+            **args):
         """Perform Baum-Welch algorithm.
 
         Requires a list of observations."""
         # Make 1-of-K representation
         # This is used to update emission probs in maximization step
+        if do_logging:
+            logging.info("Baum Welch Algorithm started.")
         x_digits = [np.array(
                 [[1 if x[n]==i else 0 for i in xrange(self._M)]
                     for n in xrange(len(x))]
                 ).T
                 for x in observations]
+        if do_logging is True:
+            logging.info("1 of K representation has been made.")
         l_prev = 0
         for n in xrange(iter_limit):
             gammas, xisums, cs = np.array([self.estimate(x) for x in observations]).T
@@ -57,7 +65,10 @@ class HMM(object):
             if has_positive(pseudocounts):
                 self.add_pseudocounts(pseudocounts)
             dif = l - l_prev
-            print n, l, dif
+            if do_logging:
+                logging.info("iter: " + str(n))
+                logging.info("Likelihood: " + str(l))
+                logging.info("Delta: " + str(dif))
             l_prev = l
             if n > 0 and dif < threshold:
                 break
@@ -82,7 +93,7 @@ class HMM(object):
             print n, l, dif
             l_prev = l
 
-    def estimate(self, x, want_alpha=False):
+    def estimate(self, x, want_alpha=False, **args):
         """Calculate alpha
 
         @param x  is an observation, which should be a list of integers."""
@@ -112,10 +123,12 @@ class HMM(object):
         return gamma, xisum, c
 
 
-    def maximize(self, gammas, xisums, cs, x_digits):
+    def maximize(self, gammas, xisums, cs, x_digits, do_logging=True):
         """Maximization step of EM algorithm.
 
         @param x_digits A matrix of 1-of-K. DxN dimension"""
+        if do_logging:
+            logging.info("Maximization step began.")
         log_likelihood = sum(np.log(c).sum() for c in cs)
         R = len(gammas)
         sumxisums = sum(xisums)
@@ -125,6 +138,8 @@ class HMM(object):
         self._t = (sumxisums.T / sumxisums.sum(1)).T
         self._e = sum(np.dot(x_digits[i], gammas[i]) for i in xrange(R))
         self._e /= sum(gammas[i].sum(0) for i in xrange(R))
+        if do_logging:
+            logging.info("Maximization step ended.")
         return log_likelihood
 
     def maximize_one(self, gamma, xisum, c, x_digits):
@@ -135,8 +150,10 @@ class HMM(object):
         self._e = np.dot(x_digits, gamma) / gamma.sum(0)
         return log_likelihood
 
-    def viterbi(self, x):
+    def viterbi(self, x, do_logging=True, **args):
         """Decode observations."""
+        if do_logging:
+            logging.info("Started calculating Viterbi path.")
         N = len(x)
         alpha, c = self.estimate(x, want_alpha=True)
         alpha, c = np.log(alpha), np.log(c)
@@ -154,6 +171,8 @@ class HMM(object):
         route = [np.argmax(omega)]
         for n in xrange(N - 2, -1, -1):
             route.append(path[n][route[-1]])
+        if do_logging:
+            logging.info("Finished calculating Viterbi path.")
         return route[::-1], omega.max()
 
     def sample(self, length):
