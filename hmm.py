@@ -51,6 +51,8 @@ class HMM(object):
         for n in xrange(iter_limit):
             gammas, xisums, cs = np.array([self.estimate(x) for x in observations]).T
             l = self.maximize(gammas, xisums, cs, x_digits)
+            if l is np.nan:
+                raise ValueError("nan detected. The scaling factors are: %s" % cs)
             #if pseudocounts != [0, 0, 0]:  # At least one pseudocount is set
             if has_positive(pseudocounts):
                 self.add_pseudocounts(pseudocounts)
