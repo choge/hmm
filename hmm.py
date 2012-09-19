@@ -7,6 +7,7 @@
 import numpy as np
 import ghmm
 import logging
+import pickle
 
 class HMM(object):
     """Implementation of hidden Markov model.
@@ -57,9 +58,17 @@ class HMM(object):
             logging.info("1 of K representation has been made.")
         l_prev = 0
         for n in xrange(iter_limit):
+            if do_logging:
+                logging.info("Estimation step began.")
             gammas, xisums, cs = np.array([self.estimate(x) for x in observations]).T
+            if do_logging:
+                logging.info("Estimation step ended.")
             l = self.maximize(gammas, xisums, cs, x_digits)
-            if l is np.nan:
+            if np.isnan(l):
+                logging.error("Log Likelihood is nan. Here are some information:")
+                logging.error("Parameters are pickled into params.pickle")
+                pickle.dump({'t': self._t, 'e': self._e, 'i': self._i},
+                            open('params.pickle', 'wb'))
                 raise ValueError("nan detected. The scaling factors are: %s" % cs)
             #if pseudocounts != [0, 0, 0]:  # At least one pseudocount is set
             if has_positive(pseudocounts):
