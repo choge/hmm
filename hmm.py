@@ -82,25 +82,6 @@ class HMM(object):
             if n > 0 and dif < threshold:
                 break
 
-    def bw_onestep(self, observations, x_digits):
-        """One step of baum welch algorithm."""
-        gammas, xisums, cs = np.array([self.estimate(x) for x in observations]).T
-        l = self.maximize(gammas, xisums, cs, x_digits)
-        return gammas, xisums, cs, l
-
-    def bw_single(self, x):
-        """Perform Baum-Welch algorithm with a single observation"""
-        # Make 1-of-K representation
-        x_digits = np.array([[1 if x[n] == i else 0 for i in xrange(self._M)]
-            for n in xrange(len(x))]).T
-        l_prev = 0
-        for n in xrange(100):
-            g, xi, c = self.estimate(x)
-            l = np.log(c).sum()
-            self.maximize_one(g, xi, c, x_digits)
-            dif = l - l_prev
-            print n, l, dif
-            l_prev = l
 
     def estimate(self, x, want_alpha=False, **args):
         """Calculate alpha
