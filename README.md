@@ -6,6 +6,7 @@ are implemented so far.
 It is a generic implementation, so one may need to write
 some wrapper to apply some real data.
 
+
 Usage
 -----
 Configure three parameters, which are transition, emission and initial
@@ -28,6 +29,17 @@ of emission probability matrix.
             threshold=1e-5, pseudocounts=[0, 1e-4, 0])
 
     path, l = h.viterbi([2, 2, 1, 0, 0, 2, 1, 1, 1, 0, 0])
+
+Using multiprocessing module, you can speed up the calculation.
+
+    import numpy as np
+    import hmm_mp
+    
+    ... # Configure parameters t, e, i
+
+    h = hmm_mp.MultiProcessHMM(t, e, i, worker_num=4)
+
+    h.baum_welch(observations)
 
 Methods
 -------

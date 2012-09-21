@@ -5,21 +5,28 @@ import numpy as np
 #import ghmm   # not used now
 import multiprocessing
 import hmm
+import logging
 
 class MultiProcessHMM(hmm.HMM):
     """Implementation of HMM with multiprocessing.
 
     Using multiprocessing module to fasten calculation of estimation
     step."""
+    def __init__(self, t, e, i, worker_num=2):
+        """Constructer."""
+        hmm.HMM.__init__(self, t, e, i)
+        self.worker_num = worker_num
+
     def baum_welch(self,
                    observations,
                    iter_limit=1000,
                    threshold=1e-5,
                    pseudocounts=[0, 0, 0],
-                   worker_num=2):
+                   worker_num=None):
         """Perform Baum-Welch algorithm.
 
         Require a list of observations."""
+        worker_num = worker_num if worker_num is not None else self.worker_num
         x_digits = [ np.array(
             [[1 if x[n] == i else 0 for i in xrange(self._M)]
                 for n in xrange(len(x))] ).T
@@ -29,13 +36,17 @@ class MultiProcessHMM(hmm.HMM):
         workers = [Worker(i, tasks, results) for i in xrange(worker_num)]
         for w in workers:
             w.start()
+            logging.info("Starting process %d...", w.id_num)
         l_prev = 0
         for n in xrange(iter_limit):
             for i in xrange(len(observations)):
-                tasks.put(Estimator(observations[i], self._t, self._e, self._i))
+                tasks.put(Estimator(observations[i], self._t, self._e, self._i, i))
             tasks.join()
+            estimations = {}
+            for i in xrange(len(observations)):
+                estimations.update(results.get())
             gammas, xisums, cs = np.array(
-                [results.get() for i in xrange(len(observations))]
+                [estimations[i] for i in xrange(len(observations))]
             ).T
             ### do something
             l = self.maximize(gammas, xisums, cs, x_digits)
@@ -75,11 +86,12 @@ class Worker(multiprocessing.Process):
         return
 
 class Estimator(object):
-    def __init__(self, x, t, e, i):
+    def __init__(self, x, t, e, i, seq_number):
         self.x = x
         self.t = t
         self.e = e
         self.i = i
+        self.seq_number = seq_number
 
     def __call__(self):
         """Calculate alpha
@@ -110,7 +122,7 @@ class Estimator(object):
         xisum = sum(
             np.outer(alpha[n-1], e[x[n]] * beta[n]) / c[n] for n in xrange(1, N)
             ) * t
-        return gamma, xisum, c
+        return {self.seq_number: [gamma, xisum, c]}
 
 def split_data(x, num):
     """Split the data set x into num subsets."""
