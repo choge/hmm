@@ -83,7 +83,7 @@ class HMM(object):
                 break
 
 
-    def estimate(self, x, want_alpha=False, **args):
+    def estimate(self, x, **args):
         """Calculate alpha
 
         @param x  is an observation, which should be a list of integers."""
@@ -99,10 +99,8 @@ class HMM(object):
         # Calculate Alpha
         for n in xrange(1, N):
             a = self._e[x[n]] * np.dot(alpha[n -1], self._t)
-            c[n] = a.sum()
-            alpha[n] = a / c[n]
-        if want_alpha:
-            return alpha, c
+            c[n] = z = a.sum()
+            alpha[n] = a / z
         # Calculate Beta
         for n in xrange(N - 2, -1, -1):
             beta[n] = np.dot(beta[n + 1] * self._e[x[n + 1]], self._t.T) / c[n + 1]
