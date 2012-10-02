@@ -100,47 +100,47 @@ class Estimator(object):
         N = len(x)
         K = len(t[0])
         # \hat{alpha}: p(z_n | x_1, ..., x_n)
-        #alpha = np.zeros([N, K], float)
-        #alpha[0] = i * e[x[0]]
-        #alpha[0] /= alpha[0].sum()
-        #beta  = np.zeros([N, K], float)
-        #beta[-1] = 1.0
-        #c = np.zeros([N], float)
-        #c[0] = alpha[0].sum()
-        ## Calculate Alpha
-        #for n in xrange(1, N):
-        #    a = e[x[n]] * np.dot(alpha[n -1], t)
-        #    c[n] = a.sum()
-        #    alpha[n] = a / c[n]
-        ## Calculate Beta
-        #for n in xrange(N - 2, -1, -1):
-        #    beta[n] = np.dot(beta[n + 1] * e[x[n + 1]], t.T) / c[n + 1]
-        #gamma = alpha * beta
-        #xisum = sum(
-        #    np.outer(alpha[n-1], e[x[n]] * beta[n]) / c[n] for n in xrange(1, N)
-        #    ) * t
-        #return {self.seq_number: [gamma, xisum, c]}
-        alpha = np.zeros((N, K))
-        c = np.ones(N)   # c[0] = 1
-        a = i * e[x[0]]
-        alpha[0] = a / a.sum()
+        alpha = np.zeros([N, K], float)
+        alpha[0] = i * e[x[0]]
+        alpha[0] /= alpha[0].sum()
+        beta  = np.zeros([N, K], float)
+        beta[-1] = 1.0
+        c = np.zeros([N], float)
+        c[0] = 1.0
+        # Calculate Alpha
         for n in xrange(1, N):
-            a = e[x[n]] * np.dot(alpha[n-1], t)
-            c[n] = z = a.sum()
-            alpha[n] = a / z
-
-        beta = np.zeros((N, K))
-        beta[N-1] = 1
-        for n in xrange(N-1, 0, -1):
-            beta[n-1] = np.dot(t, beta[n] * e[x[n]]) / c[n]
-
+            a = e[x[n]] * np.dot(alpha[n -1], t)
+            c[n] = a.sum()
+            alpha[n] = a / c[n]
+        # Calculate Beta
+        for n in xrange(N - 2, -1, -1):
+            beta[n] = np.dot(beta[n + 1] * e[x[n + 1]], t.T) / c[n + 1]
         gamma = alpha * beta
+        xisum = sum(
+            np.outer(alpha[n-1], e[x[n]] * beta[n]) / c[n] for n in xrange(1, N)
+            ) * t
+        return {self.seq_number: [gamma, xisum, c]}
+        #alpha = np.zeros((N, K))
+        #c = np.ones(N)   # c[0] = 1
+        #a = i * e[x[0]]
+        #alpha[0] = a / a.sum()
+        #for n in xrange(1, N):
+        #    a = e[x[n]] * np.dot(alpha[n-1], t)
+        #    c[n] = z = a.sum()
+        #    alpha[n] = a / z
 
-        xi_sum = np.outer(alpha[0], e[x[1]] * beta[1]) / c[1]
-        for n in range(2, N):
-            xi_sum += np.outer(alpha[n-1], e[x[n]] * beta[n]) / c[n]
-        xi_sum *= t
-        return {self.seq_number: [gamma, xi_sum, c]}
+        #beta = np.zeros((N, K))
+        #beta[N-1] = 1
+        #for n in xrange(N-1, 0, -1):
+        #    beta[n-1] = np.dot(t, beta[n] * e[x[n]]) / c[n]
+
+        #gamma = alpha * beta
+
+        #xi_sum = np.outer(alpha[0], e[x[1]] * beta[1]) / c[1]
+        #for n in range(2, N):
+        #    xi_sum += np.outer(alpha[n-1], e[x[n]] * beta[n]) / c[n]
+        #xi_sum *= t
+        #return {self.seq_number: [gamma, xi_sum, c]}
 
 def split_data(x, num):
     """Split the data set x into num subsets."""
