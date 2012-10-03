@@ -67,7 +67,7 @@ class HMM(object):
             if np.isnan(l):
                 logging.error("Log Likelihood is nan. Here are some information:")
                 logging.error("Parameters are pickled into params.pickle")
-                pickle.dump({'t': self._t, 'e': self._e, 'i': self._i},
+                pickle.dump({'t': self._t, 'e': self._e, 'i': self._i, 'xisums': xisums},
                             open('params.pickle', 'wb'))
                 raise ValueError("nan detected. The scaling factors are: %s" % cs)
             #if pseudocounts != [0, 0, 0]:  # At least one pseudocount is set
@@ -79,14 +79,17 @@ class HMM(object):
                 logging.info("Likelihood: " + str(l))
                 logging.info("Delta: " + str(dif))
             l_prev = l
+            pickle.dump({'t': self._t, 'e': self._e, 'i': self._i},
+                        open('params.pickle', 'wb'))
             if n > 0 and dif < threshold:
                 break
 
 
-    def estimate(self, x, **args):
+    def estimate(self, x, want_alpha=False, **args):
         """Calculate alpha
 
-        @param x  is an observation, which should be a list of integers."""
+        @param x  is an observation, which should be a list of integers.
+        @param want_alpha  is a boolean,"""
         N = len(x)
         # \hat{alpha}: p(z_n | x_1, ..., x_n)
         alpha = np.zeros([N, self._K], float)
@@ -101,6 +104,8 @@ class HMM(object):
             a = self._e[x[n]] * np.dot(alpha[n -1], self._t)
             c[n] = z = a.sum()
             alpha[n] = a / z
+        if want_alpha:
+            return alpha, c
         # Calculate Beta
         for n in xrange(N - 2, -1, -1):
             beta[n] = np.dot(beta[n + 1] * self._e[x[n + 1]], self._t.T) / c[n + 1]
@@ -114,7 +119,7 @@ class HMM(object):
     def maximize(self, gammas, xisums, cs, x_digits, do_logging=True):
         """Maximization step of EM algorithm.
 
-        @param x_digits A matrix of 1-of-K. DxN dimension"""
+        @param x_digits A matrix of 1-of-K representation. DxN dimension"""
         if do_logging:
             logging.info("Maximization step began.")
         log_likelihood = sum(np.log(c).sum() for c in cs)
@@ -186,6 +191,7 @@ class HMM(object):
                              pseudocounts in float or double for transition
                              probs, emission probs and initial probs.
         """
+        logging.info("Adding pseudocounts...")
         if pseudocounts[0] > 0:
             self._t += pseudocounts[0]
             self.normalize_transition()

@@ -6,6 +6,7 @@ import numpy as np
 import multiprocessing
 import hmm
 import logging
+import pickle
 
 class MultiProcessHMM(hmm.HMM):
     """Implementation of HMM with multiprocessing.
