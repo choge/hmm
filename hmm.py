@@ -151,13 +151,15 @@ class HMM(object):
         alpha, c = self.estimate(x, want_alpha=True)
         alpha, c = np.log(alpha), np.log(c)
         alpha = np.array([alpha[n] + c[:n+1].sum() for n in xrange(N)])
-        # ^ Log alpha (Not \hat{alpha})
+        # ^ log \alpha (Not \hat{\alpha})
         logt, loge = np.log(self._t), np.log(self._e)
         omega = np.log(self._i) + loge[x[0]]
+        # ^ omega: probability at current position (at position 0 here)
         path = np.array([[i for i in xrange(self._K)] for n in xrange(N)])
         # calculate the most probable path at each position of the observation
         for n in xrange(1, N):
             prob = loge[x[n]] + omega + logt.T
+            # NxN matrix  row: transition from, col: transition to
             omega = np.max(prob, axis=1)
             path[n] = np.argmax(prob, axis=1)
         # Seek the most likely route (From N-1 to 0)
