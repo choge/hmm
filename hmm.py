@@ -60,6 +60,8 @@ class HMM(object):
         for n in xrange(iter_limit):
             if do_logging:
                 logging.info("Estimation step began.")
+            ## gammas: array of R elements. Each element is also an array
+            ##        (matrix) of N x K (N is length)
             gammas, xisums, cs = np.array([self.estimate(x) for x in observations]).T
             if do_logging:
                 logging.info("Estimation step ended.")
@@ -102,8 +104,8 @@ class HMM(object):
         # Calculate Alpha
         for n in xrange(1, N):
             a = self._e[x[n]] * np.dot(alpha[n -1], self._t)
-            c[n] = z = a.sum()
-            alpha[n] = a / z
+            c[n] = a.sum()
+            alpha[n] = a / c[n]
         if want_alpha:
             return alpha, c
         # Calculate Beta
@@ -116,10 +118,12 @@ class HMM(object):
         return gamma, xisum, c
 
 
-    def maximize(self, gammas, xisums, cs, x_digits, do_logging=True):
+    def maximize(self, gammas, xisums, cs, x_digits, do_logging=True,
+                 del_state=0):
         """Maximization step of EM algorithm.
 
-        @param x_digits A matrix of 1-of-K representation. DxN dimension"""
+        @param x_digits A matrix of 1-of-K representation. DxN dimension
+        @del_state  a threshold for deletion of invalid states"""
         if do_logging:
             logging.info("Maximization step began.")
         log_likelihood = sum(np.log(c).sum() for c in cs)
@@ -127,6 +131,7 @@ class HMM(object):
         # r: identifier of sequences (integer, 0 .. R-1)
         R = len(gammas)
         sumxisums = sum(xisums)
+        sumxisums, gammas = self.delete_invalid_states(sumxisums, gammas, del_state)
 
         gammas_init = [gammas[r][0] for r in xrange(R)]
         self._i = sum(gammas_init) / sum(gammas_init[r].sum() for r in xrange(R))
@@ -137,7 +142,7 @@ class HMM(object):
             logging.info("Maximization step ended.")
         return log_likelihood
 
-    def delete_invalid_states(self, sumxisums, threshold=0):
+    def delete_invalid_states(self, sumxisums, gammas, threshold=0):
         """Check if sumxisums contain all zero rows.
 
         @param sumxisums  A matrix of \simga \simga xi.
@@ -145,19 +150,21 @@ class HMM(object):
         # check if there are all zero columns
         # (a state with such column cannot be reached from any states)
         valid = sumxisums.sum(0) > threshold
+        if np.all(valid):
+            return sumxisums, gammas
         valid_cross = np.outer(valid, valid)
         new_K = valid.sum()
 
         # slice transition probabilities
         self._t = np.reshape(self._t[valid_cross], (new_K, new_K))
-
         # slice emission probabilities
-        self._e = self._e[:, valid.mask]
-
+        self._e = self._e[:, valid]
         # slice initial probabilities
-        self._i = self._i[valid.mask]
-
+        self._i = self._i[valid]
+        # set the new number of states
         self._K = new_K
+
+        return sumxisums[valid_cross], gammas[:, :, valid]
 
     def maximize_one(self, gamma, xisum, c, x_digits):
         """Maximization with a single observation."""
