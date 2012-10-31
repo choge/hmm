@@ -6,7 +6,6 @@ import numpy as np
 import multiprocessing
 import hmm
 import logging
-import pickle
 
 class MultiProcessHMM(hmm.HMM):
     """Implementation of HMM with multiprocessing.
@@ -29,7 +28,7 @@ class MultiProcessHMM(hmm.HMM):
         Require a list of observations."""
         worker_num = worker_num if worker_num is not None else self.worker_num
         x_digits = [ np.array(
-            [[1 if x[n] == i else 0 for i in xrange(self._M)]
+            [[x[n] == i for i in xrange(self._M)]
                 for n in xrange(len(x))] ).T
             for x in observations]
         tasks = multiprocessing.JoinableQueue()
