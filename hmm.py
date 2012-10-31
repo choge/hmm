@@ -126,7 +126,8 @@ class HMM(object):
         @del_state  a threshold for deletion of invalid states"""
         if do_logging:
             logging.info("Maximization step began.")
-        log_likelihood = sum(np.log(c).sum() for c in cs)
+        #log_likelihood = sum(np.log(c).sum() for c in cs)
+        log_likelihood = np.log(cs).sum()
         # R: number of sequences.
         # r: identifier of sequences (integer, 0 .. R-1)
         R = len(gammas)
@@ -138,7 +139,8 @@ class HMM(object):
         self._i = gammas[:, 0].sum(0) / gammas[:, 0].sum()
         self._t = (sumxisums.T / sumxisums.sum(1)).T
         self._e = sum(np.dot(x_digits[i], gammas[i]) for i in xrange(R))
-        self._e /= sum(gammas[i].sum(0) for i in xrange(R))
+        self._e /= gammas.sum(1).sum(0)
+        #self._e /= sum(gammas[i].sum(0) for i in xrange(R))
         if do_logging:
             logging.info("Maximization step ended.")
         return log_likelihood
