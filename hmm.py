@@ -50,7 +50,7 @@ class HMM(object):
         if do_logging:
             logging.info("Baum Welch Algorithm started.")
         x_digits = [np.array(
-                [[1 if x[n]==i else 0 for i in xrange(self._M)]
+                [[x[n] == i for i in xrange(self._M)]
                     for n in xrange(len(x))]
                 ).T
                 for x in observations]
