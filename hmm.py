@@ -133,8 +133,9 @@ class HMM(object):
         sumxisums = sum(xisums)
         sumxisums, gammas = self.delete_invalid_states(sumxisums, gammas, del_state)
 
-        gammas_init = [gammas[r][0] for r in xrange(R)]
-        self._i = sum(gammas_init) / sum(gammas_init[r].sum() for r in xrange(R))
+        #gammas_init = [gammas[r][0] for r in xrange(R)]
+        #self._i = sum(gammas_init) / sum(gammas_init[r].sum() for r in xrange(R))
+        self._i = gammas[:, 0].sum(0) / gammas[:, 0].sum()
         self._t = (sumxisums.T / sumxisums.sum(1)).T
         self._e = sum(np.dot(x_digits[i], gammas[i]) for i in xrange(R))
         self._e /= sum(gammas[i].sum(0) for i in xrange(R))
