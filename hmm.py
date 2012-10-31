@@ -10,7 +10,7 @@ import logging
 import pickle
 
 class HMM(object):
-    """Implementation of hidden Markov model.
+    """A simple implementation of hidden Markov model.
 
     An instance of this class has transition probabilities, emission
     probabilities and initial probabilities. There are some methods that
@@ -123,6 +123,8 @@ class HMM(object):
         if do_logging:
             logging.info("Maximization step began.")
         log_likelihood = sum(np.log(c).sum() for c in cs)
+        # R: number of sequences.
+        # r: identifier of sequences (integer, 0 .. R-1)
         R = len(gammas)
         sumxisums = sum(xisums)
 

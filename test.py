@@ -18,3 +18,5 @@ data = gen_data(100, 50, 4)
 
 h = hmm_mp.MultiProcessHMM(t, e, init, 2)
 h.baum_welch(data, threshold=1e-6, pseudocounts=[1e-5, 1e-5, 1e-5])
+
+hoge = hmm_mp.split_data
