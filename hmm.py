@@ -32,6 +32,7 @@ class HMM(object):
         self._i = initial
         self._K = len(initial)      # Number of classes
         self._M = len(emission)  # Number of symbols
+        self._deleted = []   # Delete states
         logging.basicConfig(format='[%(asctime)s] %(message)s')
 
 
@@ -157,6 +158,10 @@ class HMM(object):
         valid[0] = True
         if np.all(valid):
             return sumxisums, gammas
+        # remember deleted states
+        for j in xrange(len(valid)):
+            if not valid[j]:
+                self._deleted.append(j)
         valid_cross = np.outer(valid, valid)
         new_K = valid.sum()
 
