@@ -41,6 +41,7 @@ class HMM(object):
             threshold=1e-5,
             pseudocounts=[0, 0, 0],
             do_logging=True,
+            do_debug=False,
             **args):
         """Perform Baum-Welch algorithm.
 
@@ -63,6 +64,8 @@ class HMM(object):
             ## gammas: array of R elements. Each element is also an array
             ##        (matrix) of N x K (N is length)
             gammas, xisums, cs = np.array([self.estimate(x) for x in observations]).T
+            if do_debug:
+                return gammas, xisums, cs, x_digits
             if do_logging:
                 logging.info("Estimation step ended.")
             l = self.maximize(gammas, xisums, cs, x_digits)
@@ -127,20 +130,18 @@ class HMM(object):
         if do_logging:
             logging.info("Maximization step began.")
         #log_likelihood = sum(np.log(c).sum() for c in cs)
-        log_likelihood = np.log(cs).sum()
+        log_likelihood = sum([sum(np.log(c)) for c in cs])
         # R: number of sequences.
         # r: identifier of sequences (integer, 0 .. R-1)
         R = len(gammas)
         sumxisums = sum(xisums)
         sumxisums, gammas = self.delete_invalid_states(sumxisums, gammas, del_state)
 
-        #gammas_init = [gammas[r][0] for r in xrange(R)]
-        #self._i = sum(gammas_init) / sum(gammas_init[r].sum() for r in xrange(R))
-        self._i = gammas[:, 0].sum(0) / gammas[:, 0].sum()
+        gammas_init = [gammas[r][0] for r in xrange(R)]
+        self._i = sum(gammas_init) / sum(gammas_init[r].sum() for r in xrange(R))
         self._t = (sumxisums.T / sumxisums.sum(1)).T
         self._e = sum(np.dot(x_digits[i], gammas[i]) for i in xrange(R))
-        self._e /= gammas.sum(1).sum(0)
-        #self._e /= sum(gammas[i].sum(0) for i in xrange(R))
+        self._e /= sum(gammas[i].sum(0) for i in xrange(R))
         if do_logging:
             logging.info("Maximization step ended.")
         return log_likelihood
@@ -153,6 +154,7 @@ class HMM(object):
         # check if there are all zero columns
         # (a state with such column cannot be reached from any states)
         valid = sumxisums.sum(0) > threshold
+        valid[0] = True
         if np.all(valid):
             return sumxisums, gammas
         valid_cross = np.outer(valid, valid)
@@ -167,7 +169,8 @@ class HMM(object):
         # set the new number of states
         self._K = new_K
 
-        return sumxisums[valid_cross], gammas[:, :, valid]
+        return np.reshape(sumxisums[valid_cross], (new_K, new_K)), \
+                np.array([gammas[i][:, valid] for i in xrange(len(gammas))])
 
     def maximize_one(self, gamma, xisum, c, x_digits):
         """Maximization with a single observation."""
