@@ -25,7 +25,7 @@ class HMM(object):
         initial:
 
         self._t: Transition probabilities. KxK array.
-        self._e: Emission probabilities. KxM array.
+        self._e: Emission probabilities. MxK array.
         """
         self._t = transition
         self._e = emission
@@ -136,6 +136,28 @@ class HMM(object):
         if do_logging:
             logging.info("Maximization step ended.")
         return log_likelihood
+
+    def delete_invalid_states(self, sumxisums, threshold=0):
+        """Check if sumxisums contain all zero rows.
+
+        @param sumxisums  A matrix of \simga \simga xi.
+        @param threshold  float """
+        # check if there are all zero columns
+        # (a state with such column cannot be reached from any states)
+        valid = sumxisums.sum(0) > threshold
+        valid_cross = np.outer(valid, valid)
+        new_K = valid.sum()
+
+        # slice transition probabilities
+        self._t = np.reshape(self._t[valid_cross], (new_K, new_K))
+
+        # slice emission probabilities
+        self._e = self._e[:, valid.mask]
+
+        # slice initial probabilities
+        self._i = self._i[valid.mask]
+
+        self._K = new_K
 
     def maximize_one(self, gamma, xisum, c, x_digits):
         """Maximization with a single observation."""
