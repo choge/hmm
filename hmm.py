@@ -77,7 +77,7 @@ class HMM(object):
                             open('params.pickle', 'wb'))
                 raise ValueError("nan detected. The scaling factors are: %s" % cs)
             #if pseudocounts != [0, 0, 0]:  # At least one pseudocount is set
-            if has_positive(pseudocounts):
+            if np.any(pseudocounts):
                 self.add_pseudocounts(pseudocounts)
             dif = l - l_prev
             if do_logging:
@@ -175,7 +175,7 @@ class HMM(object):
         self._K = new_K
 
         return np.reshape(sumxisums[valid_cross], (new_K, new_K)), \
-                np.array([gammas[i][:, valid] for i in xrange(len(gammas))])
+               np.array([gammas[i][:, valid] for i in xrange(len(gammas))])
 
     def maximize_one(self, gamma, xisum, c, x_digits):
         """Maximization with a single observation."""
