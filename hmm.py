@@ -154,7 +154,11 @@ class HMM(object):
         @param threshold  float """
         # check if there are all zero columns
         # (a state with such column cannot be reached from any states)
-        valid = sumxisums.sum(0) > threshold
+        # valid = sumxisums.sum(0) > threshold
+        # States without any transition to others should also be removed?
+        valid_col = sumxisums.sum(0) > threshold
+        valid_row = sumxisums.sum(1) > threshold
+        valid = valid_col & valid_row
         valid[0] = True
         if np.all(valid):
             return sumxisums, gammas
