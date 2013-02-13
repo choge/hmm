@@ -5,7 +5,7 @@
 #
 
 import numpy as np
-import ghmm
+#import ghmm
 import logging
 import pickle
 
@@ -250,20 +250,20 @@ class HMM(object):
             self._i += pseudocounts[2]
             self.normalize_initial()
 
-def convert_ghmm(g):
-    """Currently only discrete hmms can be converted.."""
-    t = np.array([[g.getTransition(i, j) for j in xrange(g.N)] for i in xrange(g.N)])
-    e = np.array([g.getEmission(i) for i in xrange(g.N)]).T
-    i = np.array([g.getInitial(j) for j in xrange(g.N)])
-    return HMM(t, e, i)
+#def convert_ghmm(g):
+#    """Currently only discrete hmms can be converted.."""
+#    t = np.array([[g.getTransition(i, j) for j in xrange(g.N)] for i in xrange(g.N)])
+#    e = np.array([g.getEmission(i) for i in xrange(g.N)]).T
+#    i = np.array([g.getInitial(j) for j in xrange(g.N)])
+#    return HMM(t, e, i)
 
 def has_positive(l):
     """Return if there are positive number in a list."""
     return any([p > 0 for p in l])
 
-def convert2ghmm(h):
-    """Convert an HMM object to a GHMM object."""
-    alphabets = ghmm.Alphabet("ACDEFGHIKLMNPQRSTVWY")
-    g = ghmm.HMMFromMatrices(alphabets, ghmm.DiscreteDistribution(alphabets),
-            h._t, h._e.T, h._i)
-    return g
+#def convert2ghmm(h):
+#    """Convert an HMM object to a GHMM object."""
+#    alphabets = ghmm.Alphabet("ACDEFGHIKLMNPQRSTVWY")
+#    g = ghmm.HMMFromMatrices(alphabets, ghmm.DiscreteDistribution(alphabets),
+#            h._t, h._e.T, h._i)
+#    return g
