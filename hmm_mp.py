@@ -28,25 +28,25 @@ class MultiProcessHMM(hmm.HMM):
         Require a list of observations."""
         worker_num = worker_num if worker_num is not None else self.worker_num
         x_digits = [ np.array(
-            [[x[n] == i for i in xrange(self._M)]
-                for n in xrange(len(x))] ).T
+            [[x[n] == i for i in range(self._M)]
+                for n in range(len(x))] ).T
             for x in observations]
         tasks = multiprocessing.JoinableQueue()
         results = multiprocessing.Queue()
-        workers = [Worker(i, tasks, results) for i in xrange(worker_num)]
+        workers = [Worker(i, tasks, results) for i in range(worker_num)]
         for w in workers:
             w.start()
             logging.info("Starting process %d...", w.id_num)
         l_prev = 0
-        for n in xrange(iter_limit):
-            for i in xrange(len(observations)):
+        for n in range(iter_limit):
+            for i in range(len(observations)):
                 tasks.put(Estimator(observations[i], self._t, self._e, self._i, i))
             tasks.join()
             estimations = {}
-            for i in xrange(len(observations)):
+            for i in range(len(observations)):
                 estimations.update(results.get())
             gammas, xisums, cs = np.array(
-                [estimations[i] for i in xrange(len(observations))]
+                [estimations[i] for i in range(len(observations))]
             ).T
             ### do something
             l = self.maximize(gammas, xisums, cs, x_digits)
@@ -57,7 +57,7 @@ class MultiProcessHMM(hmm.HMM):
             l_prev = l
             if n > 0 and dif < threshold:
                 break
-        for i in xrange(worker_num):
+        for i in range(worker_num):
             tasks.put(None)
 
 
@@ -108,16 +108,16 @@ class Estimator(object):
         c = np.zeros([N], float)
         c[0] = 1.0
         # Calculate Alpha
-        for n in xrange(1, N):
+        for n in range(1, N):
             a = e[x[n]] * np.dot(alpha[n -1], t)
             c[n] = a.sum()
             alpha[n] = a / c[n]
         # Calculate Beta
-        for n in xrange(N - 2, -1, -1):
+        for n in range(N - 2, -1, -1):
             beta[n] = np.dot(beta[n + 1] * e[x[n + 1]], t.T) / c[n + 1]
         gamma = alpha * beta
         xisum = sum(
-            np.outer(alpha[n-1], e[x[n]] * beta[n]) / c[n] for n in xrange(1, N)
+            np.outer(alpha[n-1], e[x[n]] * beta[n]) / c[n] for n in range(1, N)
             ) * t
         return {self.seq_number: [gamma, xisum, c]}
         #alpha = np.zeros((N, K))
@@ -149,7 +149,7 @@ def split_data(x, num):
     frac = data_num % num
     subsets = {}
     splitted = 0
-    for i in xrange(num):
+    for i in range(num):
         start = splitted
         end   = start + num_per_subset
         if frac > 0:
@@ -161,4 +161,4 @@ def split_data(x, num):
 
 def merge_results(xs, num):
     """Merge estimation into one numpy.array object."""
-    return np.array([xs[i] for i in xrange(num)]).T
+    return np.array([xs[i] for i in range(num)]).T

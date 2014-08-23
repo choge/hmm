@@ -52,14 +52,14 @@ class HMM(object):
         if do_logging:
             logging.info("Baum Welch Algorithm started.")
         x_digits = [np.array(
-                [[x[n] == i for i in xrange(self._M)]
-                    for n in xrange(len(x))]
+                [[x[n] == i for i in range(self._M)]
+                    for n in range(len(x))]
                 ).T
                 for x in observations]
         if do_logging is True:
             logging.info("1 of K representation has been made.")
         l_prev = 0
-        for n in xrange(iter_limit):
+        for n in range(iter_limit):
             if do_logging:
                 logging.info("Estimation step began.")
             ## gammas: array of R elements. Each element is also an array
@@ -106,18 +106,18 @@ class HMM(object):
         c = np.zeros([N], float)
         c[0] = alpha[0].sum()
         # Calculate Alpha
-        for n in xrange(1, N):
+        for n in range(1, N):
             a = self._e[x[n]] * np.dot(alpha[n -1], self._t)
             c[n] = a.sum()
             alpha[n] = a / c[n]
         if want_alpha:
             return alpha, c
         # Calculate Beta
-        for n in xrange(N - 2, -1, -1):
+        for n in range(N - 2, -1, -1):
             beta[n] = np.dot(beta[n + 1] * self._e[x[n + 1]], self._t.T) / c[n + 1]
         gamma = alpha * beta
         xisum = sum(
-            np.outer(alpha[n-1], self._e[x[n]] * beta[n]) / c[n] for n in xrange(1, N)
+            np.outer(alpha[n-1], self._e[x[n]] * beta[n]) / c[n] for n in range(1, N)
             ) * self._t
         return gamma, xisum, c
 
@@ -138,11 +138,11 @@ class HMM(object):
         sumxisums = sum(xisums)
         sumxisums, gammas = self.delete_invalid_states(sumxisums, gammas, del_state)
 
-        gammas_init = [gammas[r][0] for r in xrange(R)]
-        self._i = sum(gammas_init) / sum(gammas_init[r].sum() for r in xrange(R))
+        gammas_init = [gammas[r][0] for r in range(R)]
+        self._i = sum(gammas_init) / sum(gammas_init[r].sum() for r in range(R))
         self._t = (sumxisums.T / sumxisums.sum(1)).T
-        self._e = sum(np.dot(x_digits[i], gammas[i]) for i in xrange(R))
-        self._e /= sum(gammas[i].sum(0) for i in xrange(R))
+        self._e = sum(np.dot(x_digits[i], gammas[i]) for i in range(R))
+        self._e /= sum(gammas[i].sum(0) for i in range(R))
         if do_logging:
             logging.info("Maximization step ended.")
         return log_likelihood
@@ -163,7 +163,7 @@ class HMM(object):
         if np.all(valid):
             return sumxisums, gammas
         # remember deleted states
-        for j in xrange(len(valid)):
+        for j in range(len(valid)):
             if not valid[j]:
                 self._deleted.append(j)
         valid_cross = np.outer(valid, valid)
@@ -179,7 +179,7 @@ class HMM(object):
         self._K = new_K
 
         return np.reshape(sumxisums[valid_cross], (new_K, new_K)), \
-               np.array([gammas[i][:, valid] for i in xrange(len(gammas))])
+               np.array([gammas[i][:, valid] for i in range(len(gammas))])
 
     def maximize_one(self, gamma, xisum, c, x_digits):
         """Maximization with a single observation."""
@@ -196,21 +196,21 @@ class HMM(object):
         N = len(x)
         alpha, c = self.estimate(x, want_alpha=True)
         alpha, c = np.log(alpha), np.log(c)
-        alpha = np.array([alpha[n] + c[:n+1].sum() for n in xrange(N)])
+        alpha = np.array([alpha[n] + c[:n+1].sum() for n in range(N)])
         # ^ log \alpha (Not \hat{\alpha})
         logt, loge = np.log(self._t), np.log(self._e)
         omega = np.log(self._i) + loge[x[0]]
         # ^ omega: probability at current position (at position 0 here)
-        path = np.array([[i for i in xrange(self._K)] for n in xrange(N)])
+        path = np.array([[i for i in range(self._K)] for n in range(N)])
         # calculate the most probable path at each position of the observation
-        for n in xrange(1, N):
+        for n in range(1, N):
             prob = loge[x[n]] + omega + logt.T
             # NxN matrix  row: transition from, col: transition to
             omega = np.max(prob, axis=1)
             path[n] = np.argmax(prob, axis=1)
         # Seek the most likely route (From N-1 to 0)
         route = [np.argmax(omega)]
-        for n in xrange(N - 2, -1, -1):
+        for n in range(N - 2, -1, -1):
             route.append(path[n][route[-1]])
         if do_logging:
             logging.info("Finished calculating Viterbi path.")
