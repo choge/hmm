@@ -35,7 +35,6 @@ class HMM(object):
         self._deleted = []   # Delete states
         logging.basicConfig(format='[%(asctime)s] %(message)s')
 
-
     def baum_welch(self,
             observations,
             iter_limit=100,
