@@ -4,7 +4,7 @@
 import numpy as np
 #import ghmm   # not used now
 import multiprocessing
-import hmm
+from . import hmm
 import logging
 
 class MultiProcessHMM(hmm.HMM):
