@@ -34,7 +34,7 @@ def load_ghmmxml(filename):
         transitions.append(transition_prob)
 
     return (np.array(transitions, dtype=float),
-            np.array(emissions, dtype=float),
+            np.array(emissions, dtype=float).T,
             np.array(initials, dtype=float))
 
 
