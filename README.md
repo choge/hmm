@@ -41,6 +41,13 @@ Using multiprocessing module, you can speed up the calculation.
 
     h.baum_welch(observations)
 
+This module also offers importing an XML file of GHMM.
+
+    import hmm
+
+    (t, e, i) = hmm.load_ghmmxml('filename.xml')
+    h = hmm.MultiProcessHMM(t, e, i, 4)
+
 Methods
 -------
 + `baum_welch` :
