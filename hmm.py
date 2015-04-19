@@ -188,10 +188,12 @@ class HMM(object):
         self._e = np.dot(x_digits, gamma) / gamma.sum(0)
         return log_likelihood
 
-    def viterbi(self, x, do_logging=True, **args):
-        """Decode observations."""
+    def viterbi(self, x, do_logging=True, return_omega=False, **args):
+        """Decode observations.
+        
+        @param x  is the sequence of observations"""
         if do_logging:
-            logging.info("Started calculating Viterbi path.")
+            logging.debug("Started calculating Viterbi path.")
         N = len(x)
         alpha, c = self.estimate(x, want_alpha=True)
         alpha, c = np.log(alpha), np.log(c)
@@ -199,6 +201,7 @@ class HMM(object):
         # ^ log \alpha (Not \hat{\alpha})
         logt, loge = np.log(self._t), np.log(self._e)
         omega = np.log(self._i) + loge[x[0]]
+        omega_history = [omega]
         # ^ omega: probability at current position (at position 0 here)
         path = np.array([[i for i in range(self._K)] for n in range(N)])
         # calculate the most probable path at each position of the observation
@@ -206,14 +209,19 @@ class HMM(object):
             prob = loge[x[n]] + omega + logt.T
             # NxN matrix  row: transition from, col: transition to
             omega = np.max(prob, axis=1)
+            omega_history.append(omega)
             path[n] = np.argmax(prob, axis=1)
         # Seek the most likely route (From N-1 to 0)
         route = [np.argmax(omega)]
         for n in range(N - 2, -1, -1):
             route.append(path[n][route[-1]])
         if do_logging:
-            logging.info("Finished calculating Viterbi path.")
-        return route[::-1], omega.max()
+            logging.debug("Finished calculating Viterbi path.")
+            logging.info(omega)
+        if return_omega:
+            return route[::-1], omega.max(), omega_history
+        else:
+            return route[::-1], omega.max()
 
     def sample(self, length):
         """Sample the sequence for specified length"""
