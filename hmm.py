@@ -201,7 +201,7 @@ class HMM(object):
         # ^ log \alpha (Not \hat{\alpha})
         logt, loge = np.log(self._t), np.log(self._e)
         omega = np.log(self._i) + loge[x[0]]
-        omega_history = [omega]
+        omega_history = []
         # ^ omega: probability at current position (at position 0 here)
         path = np.array([[i for i in range(self._K)] for n in range(N)])
         # calculate the most probable path at each position of the observation
@@ -210,16 +210,19 @@ class HMM(object):
             # NxN matrix  row: transition from, col: transition to
             omega = np.max(prob, axis=1)
             omega_history.append(omega)
+            # omega is a vector with length N
             path[n] = np.argmax(prob, axis=1)
         # Seek the most likely route (From N-1 to 0)
         route = [np.argmax(omega)]
+        omegas = [omega[route[0]]]
         for n in range(N - 2, -1, -1):
             route.append(path[n][route[-1]])
+            omegas.append(omega_history[n][route[-1]])
         if do_logging:
             logging.debug("Finished calculating Viterbi path.")
             logging.info(omega)
         if return_omega:
-            return route[::-1], omega.max(), omega_history
+            return route[::-1], omega.max(), omegas[::-1]
         else:
             return route[::-1], omega.max()
 
