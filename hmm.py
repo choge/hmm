@@ -220,7 +220,7 @@ class HMM(object):
             omegas.append(omega_history[n][route[-1]])
         if do_logging:
             logging.debug("Finished calculating Viterbi path.")
-            logging.info(omega)
+            logging.debug(omega)
         if return_omega:
             return route[::-1], omega.max(), omegas[::-1]
         else:
